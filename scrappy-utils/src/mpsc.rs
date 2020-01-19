@@ -18,10 +18,11 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
         buffer: VecDeque::new(),
         blocked_recv: LocalWaker::new(),
     });
+    let shared_clone = shared.clone();
     let sender = Sender {
         shared: shared,
     };
-    let receiver = Receiver { shared };
+    let receiver = Receiver { shared: shared_clone };
     (sender, receiver)
 }
 
@@ -45,12 +46,12 @@ impl<T> Unpin for Sender<T> {}
 impl<T: 'static> Sender<T> {
     /// Sends the provided message along this channel.
     pub fn send(&self, item: T) -> Result<(), SendError<T>> {
-        let shared = self.shared.get_mut();
+        let shared = self.clone().shared.get_mut();
         if !shared.has_receiver {
             return Err(SendError(item)); // receiver was dropped
         };
         shared.buffer.push_back(item);
-        shared.blocked_recv.wake();
+        shared.blocked_recv.clone().wake();
         Ok(())
     }
 
@@ -59,7 +60,7 @@ impl<T: 'static> Sender<T> {
     /// This prevents any further messages from being sent on the channel while
     /// still enabling the receiver to drain messages that are buffered.
     pub fn close(&mut self) {
-        self.shared.get_mut().has_receiver = false;
+        self.clone().shared.get_mut().has_receiver = false;
     }
 }
 
@@ -98,12 +99,12 @@ struct SenderWrapper<T: 'static> {
 impl<T: 'static> Drop for SenderWrapper<T> {
     fn drop(&mut self) {
         let count = self.t.shared.strong_count();
-        let shared = self.t.shared.get_mut();
+        let shared = self.t.clone().shared.get_mut();
 
         // check is last sender is about to drop
         if shared.has_receiver && count == 2 {
             // Wake up receiver as its stream has ended
-            shared.blocked_recv.wake();
+            shared.blocked_recv.clone().wake();
         }
     }
 }
@@ -130,15 +131,15 @@ impl<T> Unpin for Receiver<T> {}
 impl<T: 'static> Stream for Receiver<T> {
     type Item = T;
 
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         if self.shared.strong_count() == 1 {
             // All senders have been dropped, so drain the buffer and end the
             // stream.
-            Poll::Ready(self.shared.get_mut().buffer.pop_front())
-        } else if let Some(msg) = self.shared.get_mut().buffer.pop_front() {
+            Poll::Ready(self.shared.clone().get_mut().buffer.pop_front())
+        } else if let Some(msg) = self.shared.clone().get_mut().buffer.pop_front() {
             Poll::Ready(Some(msg))
         } else {
-            self.shared.get_mut().blocked_recv.register(cx.waker());
+            self.shared.clone().get_mut().blocked_recv.clone().register(cx.waker());
             Poll::Pending
         }
     }
@@ -150,7 +151,7 @@ struct ReceiverWrapper<T: 'static> {
 
 impl<T: 'static> Drop for ReceiverWrapper<T> {
     fn drop(&mut self) {
-        let shared = self.t.shared.get_mut();
+        let shared = self.t.shared.clone().get_mut();
         shared.buffer.clear();
         shared.has_receiver = false;
     }

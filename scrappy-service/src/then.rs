@@ -29,7 +29,7 @@ impl<A, B> Clone for ThenService<A, B> {
     }
 }
 
-impl<A, B> Service for ThenService<A, B>
+impl<A: 'static, B: 'static> Service for ThenService<A, B>
 where
     A: Service,
     B: Service<Request = Result<A::Response, A::Error>, Error = A::Error>,
@@ -39,8 +39,8 @@ where
     type Error = B::Error;
     type Future = ThenServiceResponse<A, B>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        let srv = self.0.get_mut();
+    fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        let srv = self.0.clone().get_mut();
         let not_ready = !srv.0.poll_ready(cx)?.is_ready();
         if !srv.1.poll_ready(cx)?.is_ready() || not_ready {
             Poll::Pending
@@ -49,9 +49,9 @@ where
         }
     }
 
-    fn call(&mut self, req: A::Request) -> Self::Future {
+    fn call(self, req: A::Request) -> Self::Future {
         ThenServiceResponse {
-            state: State::A(self.0.get_mut().0.call(req), Some(self.0.clone())),
+            state: State::A(self.0.clone().get_mut().0.call(req), Some(self.0.clone())),
         }
     }
 }
@@ -77,7 +77,7 @@ where
     Empty,
 }
 
-impl<A, B> Future for ThenServiceResponse<A, B>
+impl<A: 'static, B: 'static> Future for ThenServiceResponse<A, B>
 where
     A: Service,
     B: Service<Request = Result<A::Response, A::Error>>,
@@ -92,7 +92,7 @@ where
         match this.state.as_mut().project() {
             State::A(fut, b) => match fut.poll(cx) {
                 Poll::Ready(res) => {
-                    let mut b = b.take().unwrap();
+                    let b = b.take().unwrap();
                     this.state.set(State::Empty); // drop fut A
                     let fut = b.get_mut().1.call(res);
                     this.state.set(State::B(fut));
@@ -129,7 +129,7 @@ where
     }
 }
 
-impl<A, B> ServiceFactory for ThenServiceFactory<A, B>
+impl<A: 'static, B: 'static> ServiceFactory for ThenServiceFactory<A, B>
 where
     A: ServiceFactory,
     A::Config: Clone,
@@ -255,12 +255,12 @@ mod tests {
         type Error = ();
         type Future = Ready<Result<Self::Response, Self::Error>>;
 
-        fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        fn poll_ready(self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
             self.0.set(self.0.get() + 1);
             Poll::Ready(Ok(()))
         }
 
-        fn call(&mut self, req: Result<&'static str, &'static str>) -> Self::Future {
+        fn call(self, req: Result<&'static str, &'static str>) -> Self::Future {
             match req {
                 Ok(msg) => ok(msg),
                 Err(_) => err(()),
@@ -276,12 +276,12 @@ mod tests {
         type Error = ();
         type Future = Ready<Result<Self::Response, ()>>;
 
-        fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        fn poll_ready(self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
             self.0.set(self.0.get() + 1);
             Poll::Ready(Err(()))
         }
 
-        fn call(&mut self, req: Result<&'static str, ()>) -> Self::Future {
+        fn call(self, req: Result<&'static str, ()>) -> Self::Future {
             match req {
                 Ok(msg) => ok((msg, "ok")),
                 Err(()) => ok(("srv2", "err")),
@@ -318,7 +318,7 @@ mod tests {
         let cnt2 = cnt.clone();
         let blank = move || ready(Ok::<_, ()>(Srv1(cnt2.clone())));
         let factory = pipeline_factory(blank).then(move || ready(Ok(Srv2(cnt.clone()))));
-        let mut srv = factory.new_service(&()).await.unwrap();
+        let srv = factory.new_service(&()).await.unwrap();
         let res = srv.call(Ok("srv1")).await;
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), (("srv1", "ok")));

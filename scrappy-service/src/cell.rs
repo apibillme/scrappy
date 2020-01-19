@@ -1,9 +1,12 @@
-//! Custom cell impl, internal use only
+//! Custom cell impl
+
 use std::task::{Context, Poll};
-use std::{cell::UnsafeCell, fmt, rc::Rc};
+use std::cell::RefCell;
+use std::fmt;
+use std::rc::Rc;
 
 pub(crate) struct Cell<T> {
-    inner: Rc<UnsafeCell<T>>,
+    pub(crate) inner: Rc<RefCell<T>>,
 }
 
 impl<T> Clone for Cell<T> {
@@ -23,35 +26,34 @@ impl<T: fmt::Debug> fmt::Debug for Cell<T> {
 impl<T> Cell<T> {
     pub(crate) fn new(inner: T) -> Self {
         Self {
-            inner: Rc::new(UnsafeCell::new(inner)),
+            inner: Rc::new(RefCell::new(inner)),
         }
     }
 
-    pub(crate) fn get_ref(&self) -> &T {
-        unsafe { &*self.inner.as_ref().get() }
+    pub(crate) fn strong_count(&self) -> usize {
+        Rc::strong_count(&self.inner)
     }
 
-    pub(crate) fn get_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.inner.as_ref().get() }
+    pub(crate) fn get_mut(self) -> &'static mut T {
+        &mut self.clone().inner.borrow_mut()
     }
 
-    #[allow(clippy::mut_from_ref)]
-    pub(crate) unsafe fn get_mut_unsafe(&self) -> &mut T {
-        &mut *self.inner.as_ref().get()
+    pub(crate) fn get_ref(self) -> &'static T {
+        &self.inner.try_borrow().unwrap()
     }
 }
 
-impl<T: crate::Service> crate::Service for Cell<T> {
+impl<T: 'static +  crate::Service> crate::Service for Cell<T> {
     type Request = T::Request;
     type Response = T::Response;
     type Error = T::Error;
     type Future = T::Future;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.get_mut().poll_ready(cx)
+    fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.clone().get_mut().poll_ready(cx)
     }
 
-    fn call(&mut self, req: Self::Request) -> Self::Future {
-        self.get_mut().call(req)
+    fn call(self, req: Self::Request) -> Self::Future {
+        self.clone().get_mut().call(req)
     }
 }

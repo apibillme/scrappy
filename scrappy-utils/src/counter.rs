@@ -69,7 +69,7 @@ impl CounterInner {
         let num = self.count.get();
         self.count.set(num - 1);
         if num == self.capacity {
-            self.task.wake();
+            self.task.clone().wake();
         }
     }
 
@@ -77,7 +77,7 @@ impl CounterInner {
         if self.count.get() < self.capacity {
             true
         } else {
-            self.task.register(cx.waker());
+            self.task.clone().register(cx.waker());
             false
         }
     }

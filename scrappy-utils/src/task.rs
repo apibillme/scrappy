@@ -19,7 +19,7 @@ use std::{fmt, rc};
 ///
 /// A single `AtomicWaker` may be reused for any number of calls to `register` or
 /// `wake`.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct LocalWaker {
     pub(crate) waker: RefCell<Option<Waker>>,
     _t: PhantomData<rc::Rc<()>>,
@@ -36,7 +36,7 @@ impl LocalWaker {
 
     #[inline]
     /// Check if waker has been registered.
-    pub fn is_registed(&self) -> bool {
+    pub fn is_registed(mut self) -> bool {
         self.waker.get_mut().is_some()
     }
 
@@ -44,7 +44,7 @@ impl LocalWaker {
     /// Registers the waker to be notified on calls to `wake`.
     ///
     /// Returns `true` if waker was registered before.
-    pub fn register(&self, waker: &Waker) -> bool {
+    pub fn register(mut self, waker: &Waker) -> bool {
         let w = self.waker.get_mut();
         let is_registered = (*w).is_some();
         *w = Some(waker.clone());
@@ -55,7 +55,7 @@ impl LocalWaker {
     /// Calls `wake` on the last `Waker` passed to `register`.
     ///
     /// If `register` has not been called yet, then this does nothing.
-    pub fn wake(&self) {
+    pub fn wake(self) {
         if let Some(waker) = self.take() {
             waker.wake();
         }
@@ -64,7 +64,7 @@ impl LocalWaker {
     /// Returns the last `Waker` passed to `register`, so that the user can wake it.
     ///
     /// If a waker has not been registered, this returns `None`.
-    pub fn take(&self) -> Option<Waker> {
+    pub fn take(mut self) -> Option<Waker> {
         self.waker.get_mut().take()
     }
 }

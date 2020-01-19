@@ -59,7 +59,7 @@ impl<'a> ServiceFactory for LowResTime {
 #[derive(Clone, Debug)]
 pub struct LowResTimeService(Cell<Inner>);
 
-impl LowResTimeService {
+impl<'a> LowResTimeService {
     pub fn with(resolution: Duration) -> LowResTimeService {
         LowResTimeService(Cell::new(Inner::new(resolution)))
     }
@@ -72,7 +72,7 @@ impl LowResTimeService {
             cur
         } else {
             let now = Instant::now();
-            let mut inner = self.0;
+            let inner = self.0;
             let interval = {
                 let mut b = inner.get_mut();
                 b.current = Some(now);

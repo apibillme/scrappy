@@ -53,7 +53,7 @@ where
     }
 }
 
-impl<A, B, F, Fut, Res, Err> Service for AndThenApplyFn<A, B, F, Fut, Res, Err>
+impl<A: 'static, B: 'static, F: 'static, Fut, Res, Err> Service for AndThenApplyFn<A, B, F, Fut, Res, Err>
 where
     A: Service,
     B: Service,
@@ -66,8 +66,8 @@ where
     type Error = Err;
     type Future = AndThenApplyFnFuture<A, B, F, Fut, Res, Err>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        let inner = self.srv.get_mut();
+    fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        let inner = self.srv.clone().get_mut();
         let not_ready = inner.0.poll_ready(cx)?.is_pending();
         if inner.1.poll_ready(cx)?.is_pending() || not_ready {
             Poll::Pending
@@ -76,7 +76,7 @@ where
         }
     }
 
-    fn call(&mut self, req: A::Request) -> Self::Future {
+    fn call(self, req: A::Request) -> Self::Future {
         let fut = self.srv.get_mut().0.call(req);
         AndThenApplyFnFuture {
             state: State::A(fut, Some(self.srv.clone())),
@@ -113,7 +113,7 @@ where
     Empty,
 }
 
-impl<A, B, F, Fut, Res, Err> Future for AndThenApplyFnFuture<A, B, F, Fut, Res, Err>
+impl<A: 'static, B: 'static, F: 'static, Fut, Res, Err> Future for AndThenApplyFnFuture<A, B, F, Fut, Res, Err>
 where
     A: Service,
     B: Service,
@@ -131,7 +131,7 @@ where
         match this.state.as_mut().project() {
             State::A(fut, b) => match fut.poll(cx)? {
                 Poll::Ready(res) => {
-                    let mut b = b.take().unwrap();
+                    let b = b.take().unwrap();
                     this.state.set(State::Empty);
                     let b = b.get_mut();
                     let fut = (&mut b.2)(res, &mut b.1);
@@ -181,7 +181,7 @@ impl<A, B, F, Fut, Res, Err> Clone for AndThenApplyFnFactory<A, B, F, Fut, Res, 
     }
 }
 
-impl<A, B, F, Fut, Res, Err> ServiceFactory for AndThenApplyFnFactory<A, B, F, Fut, Res, Err>
+impl<A: 'static, B: 'static, F: 'static, Fut, Res, Err> ServiceFactory for AndThenApplyFnFactory<A, B, F, Fut, Res, Err>
 where
     A: ServiceFactory,
     A::Config: Clone,
@@ -286,25 +286,26 @@ mod tests {
         type Error = ();
         type Future = Ready<Result<(), ()>>;
 
-        fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        fn poll_ready(self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
             Poll::Ready(Ok(()))
         }
 
-        fn call(&mut self, req: Self::Request) -> Self::Future {
+        fn call(self, req: Self::Request) -> Self::Future {
             ok(req)
         }
     }
 
     #[scrappy_rt::test]
     async fn test_service() {
-        let mut srv = pipeline(|r: &'static str| ok(r))
+        let srv = pipeline(|r: &'static str| ok(r))
             .and_then_apply_fn(Srv, |req: &'static str, s| {
                 s.call(()).map_ok(move |res| (req, res))
             });
+        let srv_clone = srv.clone();
         let res = lazy(|cx| srv.poll_ready(cx)).await;
         assert_eq!(res, Poll::Ready(Ok(())));
 
-        let res = srv.call("srv").await;
+        let res = srv_clone.call("srv").await;
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), ("srv", ()));
     }
@@ -316,11 +317,12 @@ mod tests {
                 || ok(Srv),
                 |req: &'static str, s| s.call(()).map_ok(move |res| (req, res)),
             );
-        let mut srv = new_srv.new_service(()).await.unwrap();
+        let srv = new_srv.new_service(()).await.unwrap();
+        let srv_clone = srv.clone();
         let res = lazy(|cx| srv.poll_ready(cx)).await;
         assert_eq!(res, Poll::Ready(Ok(())));
 
-        let res = srv.call("srv").await;
+        let res = srv_clone.call("srv").await;
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), ("srv", ()));
     }

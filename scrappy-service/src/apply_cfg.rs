@@ -7,7 +7,7 @@ use crate::cell::Cell;
 use crate::{Service, ServiceFactory};
 
 /// Convert `Fn(Config, &mut Service1) -> Future<Service2>` fn to a service factory
-pub fn apply_cfg<F, C, T, R, S, E>(
+pub fn apply_cfg<F: 'static, C, T: 'static, R, S, E>(
     srv: T,
     f: F,
 ) -> impl ServiceFactory<
@@ -34,7 +34,7 @@ where
 /// Convert `Fn(Config, &mut Service1) -> Future<Service2>` fn to a service factory
 ///
 /// Service1 get constructed from `T` factory.
-pub fn apply_cfg_factory<F, C, T, R, S>(
+pub fn apply_cfg_factory<F: 'static, C, T: 'static, R, S>(
     factory: T,
     f: F,
 ) -> impl ServiceFactory<
@@ -85,7 +85,7 @@ where
     }
 }
 
-impl<F, C, T, R, S, E> ServiceFactory for ApplyConfigService<F, C, T, R, S, E>
+impl<F: 'static, C, T: 'static, R, S, E> ServiceFactory for ApplyConfigService<F, C, T, R, S, E>
 where
     F: FnMut(C, &mut T) -> R,
     T: Service,
@@ -102,10 +102,8 @@ where
     type Future = R;
 
     fn new_service(&self, cfg: C) -> Self::Future {
-        unsafe {
-            let srv = self.srv.get_mut_unsafe();
-            (srv.1)(cfg, &mut srv.0)
-        }
+        let srv = self.clone().srv.get_mut();
+        (srv.1)(cfg, &mut srv.0)
     }
 }
 
@@ -136,7 +134,7 @@ where
     }
 }
 
-impl<F, C, T, R, S> ServiceFactory for ApplyConfigServiceFactory<F, C, T, R, S>
+impl<F: 'static, C, T: 'static, R, S> ServiceFactory for ApplyConfigServiceFactory<F, C, T, R, S>
 where
     F: FnMut(C, &mut T::Service) -> R,
     T: ServiceFactory<Config = ()>,
@@ -157,7 +155,7 @@ where
         ApplyConfigServiceFactoryResponse {
             cfg: Some(cfg),
             store: self.srv.clone(),
-            state: State::A(self.srv.get_ref().0.new_service(())),
+            state: State::A(self.clone().srv.get_mut().0.new_service(())),
         }
     }
 }
@@ -190,7 +188,7 @@ where
     C(#[pin] R),
 }
 
-impl<F, C, T, R, S> Future for ApplyConfigServiceFactoryResponse<F, C, T, R, S>
+impl<F: 'static, C, T: 'static, R, S> Future for ApplyConfigServiceFactoryResponse<F, C, T, R, S>
 where
     F: FnMut(C, &mut T::Service) -> R,
     T: ServiceFactory<Config = ()>,
@@ -215,7 +213,7 @@ where
             },
             State::B(srv) => match srv.poll_ready(cx)? {
                 Poll::Ready(_) => {
-                    let fut = (this.store.get_mut().1)(this.cfg.take().unwrap(), srv);
+                    let fut = (this.store.clone().get_mut().1)(this.cfg.take().unwrap(), srv);
                     this.state.set(State::C(fut));
                     self.poll(cx)
                 }

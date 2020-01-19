@@ -36,7 +36,7 @@ pub struct Pipeline<T> {
     service: T,
 }
 
-impl<T: Service> Pipeline<T> {
+impl<T: 'static +  Service> Pipeline<T> {
     /// Call another service after call to this one has resolved successfully.
     ///
     /// This function can be used to chain two services together and ensure that
@@ -46,7 +46,7 @@ impl<T: Service> Pipeline<T> {
     ///
     /// Note that this function consumes the receiving service and returns a
     /// wrapped version of it.
-    pub fn and_then<F, U>(
+    pub fn and_then<F, U: 'static>(
         self,
         service: F,
     ) -> Pipeline<
@@ -66,7 +66,7 @@ impl<T: Service> Pipeline<T> {
     /// chain.
     ///
     /// Short version of `pipeline_factory(...).and_then(apply_fn_factory(...))`
-    pub fn and_then_apply_fn<U, I, F, Fut, Res, Err>(
+    pub fn and_then_apply_fn<U: 'static, I, F: 'static, Fut, Res, Err>(
         self,
         service: I,
         f: F,
@@ -89,7 +89,7 @@ impl<T: Service> Pipeline<T> {
     ///
     /// Note that this function consumes the receiving pipeline and returns a
     /// wrapped version of it.
-    pub fn then<F, U>(
+    pub fn then<F, U: 'static>(
         self,
         service: F,
     ) -> Pipeline<
@@ -161,12 +161,12 @@ impl<T: Service> Service for Pipeline<T> {
     type Future = T::Future;
 
     #[inline]
-    fn poll_ready(&mut self, ctx: &mut Context<'_>) -> Poll<Result<(), T::Error>> {
+    fn poll_ready(self, ctx: &mut Context<'_>) -> Poll<Result<(), T::Error>> {
         self.service.poll_ready(ctx)
     }
 
     #[inline]
-    fn call(&mut self, req: T::Request) -> Self::Future {
+    fn call(self, req: T::Request) -> Self::Future {
         self.service.call(req)
     }
 }
@@ -176,9 +176,9 @@ pub struct PipelineFactory<T> {
     factory: T,
 }
 
-impl<T: ServiceFactory> PipelineFactory<T> {
+impl<T: 'static +  ServiceFactory> PipelineFactory<T> {
     /// Call another service after call to this one has resolved successfully.
-    pub fn and_then<F, U>(
+    pub fn and_then<F, U: 'static>(
         self,
         factory: F,
     ) -> PipelineFactory<
@@ -215,7 +215,7 @@ impl<T: ServiceFactory> PipelineFactory<T> {
     /// chain.
     ///
     /// Short version of `pipeline_factory(...).and_then(apply_fn_factory(...))`
-    pub fn and_then_apply_fn<U, I, F, Fut, Res, Err>(
+    pub fn and_then_apply_fn<U: 'static, I, F: 'static, Fut, Res, Err>(
         self,
         factory: I,
         f: F,
@@ -249,7 +249,7 @@ impl<T: ServiceFactory> PipelineFactory<T> {
     ///
     /// Note that this function consumes the receiving pipeline and returns a
     /// wrapped version of it.
-    pub fn then<F, U>(
+    pub fn then<F, U: 'static>(
         self,
         factory: F,
     ) -> PipelineFactory<

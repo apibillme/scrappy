@@ -142,11 +142,11 @@ where
     type Error = Err;
     type Future = Fut;
 
-    fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, req: Req) -> Self::Future {
+    fn call(mut self, req: Req) -> Self::Future {
         (self.f)(req)
     }
 }
@@ -200,11 +200,11 @@ where
     type Error = Err;
     type Future = Fut;
 
-    fn poll_ready(&mut self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(self, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, req: Self::Request) -> Self::Future {
+    fn call(mut self, req: Self::Request) -> Self::Future {
         (self.f)(req)
     }
 }
@@ -371,19 +371,21 @@ mod tests {
     async fn test_fn_service() {
         let new_srv = fn_service(|()| ok::<_, ()>("srv"));
 
-        let mut srv = new_srv.new_service(()).await.unwrap();
+        let srv = new_srv.new_service(()).await.unwrap();
+        let srv_clone = srv.clone();
         let res = srv.call(()).await;
-        assert_eq!(lazy(|cx| srv.poll_ready(cx)).await, Poll::Ready(Ok(())));
+        assert_eq!(lazy(|cx| srv_clone.poll_ready(cx)).await, Poll::Ready(Ok(())));
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), "srv");
     }
 
     #[scrappy_rt::test]
     async fn test_fn_service_service() {
-        let mut srv = fn_service(|()| ok::<_, ()>("srv"));
+        let srv = fn_service(|()| ok::<_, ()>("srv"));
+        let srv_clone = srv.clone();
 
         let res = srv.call(()).await;
-        assert_eq!(lazy(|cx| srv.poll_ready(cx)).await, Poll::Ready(Ok(())));
+        assert_eq!(lazy(|cx| srv_clone.poll_ready(cx)).await, Poll::Ready(Ok(())));
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), "srv");
     }
@@ -394,9 +396,10 @@ mod tests {
             ok::<_, ()>(fn_service(move |()| ok::<_, ()>(("srv", cfg))))
         });
 
-        let mut srv = new_srv.new_service(1).await.unwrap();
+        let srv = new_srv.new_service(1).await.unwrap();
+        let srv_clone = srv.clone();
         let res = srv.call(()).await;
-        assert_eq!(lazy(|cx| srv.poll_ready(cx)).await, Poll::Ready(Ok(())));
+        assert_eq!(lazy(|cx| srv_clone.poll_ready(cx)).await, Poll::Ready(Ok(())));
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), ("srv", 1));
     }

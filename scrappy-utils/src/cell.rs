@@ -34,6 +34,6 @@ impl<T> Cell<T> {
     }
 
     pub(crate) fn get_mut(self) -> &'static mut T {
-        self.inner.get_mut()
+        &mut self.inner.borrow_mut()
     }
 }

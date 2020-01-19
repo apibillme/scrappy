@@ -84,7 +84,7 @@ where
     }
 }
 
-impl<S> Transform<S> for InOrder<S>
+impl<S: 'static> Transform<S> for InOrder<S>
 where
     S: Service,
     S::Response: 'static,
@@ -128,7 +128,7 @@ where
     }
 }
 
-impl<S> Service for InOrderService<S>
+impl<S: 'static> Service for InOrderService<S>
 where
     S: Service,
     S::Response: 'static,
@@ -189,7 +189,7 @@ pub struct InOrderServiceResponse<S: Service> {
     rx: oneshot::Receiver<Result<S::Response, S::Error>>,
 }
 
-impl<S: Service> Future for InOrderServiceResponse<S> {
+impl<S: 'static + Service> Future for InOrderServiceResponse<S> {
     type Output = Result<S::Response, InOrderError<S::Error>>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
