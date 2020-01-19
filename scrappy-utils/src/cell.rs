@@ -32,8 +32,4 @@ impl<T> Cell<T> {
     pub(crate) fn strong_count(&self) -> usize {
         Rc::strong_count(&self.inner)
     }
-
-    pub(crate) fn get_mut(self) -> &'static mut T {
-        &mut self.inner.borrow_mut()
-    }
 }

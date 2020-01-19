@@ -46,7 +46,7 @@ impl<T> Unpin for Sender<T> {}
 impl<T: 'static> Sender<T> {
     /// Sends the provided message along this channel.
     pub fn send(&self, item: T) -> Result<(), SendError<T>> {
-        let shared = self.clone().shared.get_mut();
+        let mut shared = self.shared.inner.borrow_mut();
         if !shared.has_receiver {
             return Err(SendError(item)); // receiver was dropped
         };
@@ -60,7 +60,7 @@ impl<T: 'static> Sender<T> {
     /// This prevents any further messages from being sent on the channel while
     /// still enabling the receiver to drain messages that are buffered.
     pub fn close(&mut self) {
-        self.clone().shared.get_mut().has_receiver = false;
+        self.clone().shared.inner.borrow_mut().has_receiver = false;
     }
 }
 
@@ -99,7 +99,7 @@ struct SenderWrapper<T: 'static> {
 impl<T: 'static> Drop for SenderWrapper<T> {
     fn drop(&mut self) {
         let count = self.t.shared.strong_count();
-        let shared = self.t.clone().shared.get_mut();
+        let shared = self.t.shared.inner.borrow_mut();
 
         // check is last sender is about to drop
         if shared.has_receiver && count == 2 {
@@ -135,11 +135,11 @@ impl<T: 'static> Stream for Receiver<T> {
         if self.shared.strong_count() == 1 {
             // All senders have been dropped, so drain the buffer and end the
             // stream.
-            Poll::Ready(self.shared.clone().get_mut().buffer.pop_front())
-        } else if let Some(msg) = self.shared.clone().get_mut().buffer.pop_front() {
+            Poll::Ready(self.shared.clone().inner.borrow_mut().buffer.pop_front())
+        } else if let Some(msg) = self.shared.clone().inner.borrow_mut().buffer.pop_front() {
             Poll::Ready(Some(msg))
         } else {
-            self.shared.clone().get_mut().blocked_recv.clone().register(cx.waker());
+            self.shared.clone().inner.borrow_mut().blocked_recv.clone().register(cx.waker());
             Poll::Pending
         }
     }
@@ -151,7 +151,7 @@ struct ReceiverWrapper<T: 'static> {
 
 impl<T: 'static> Drop for ReceiverWrapper<T> {
     fn drop(&mut self) {
-        let shared = self.t.shared.clone().get_mut();
+        let mut shared = self.t.shared.inner.borrow_mut();
         shared.buffer.clear();
         shared.has_receiver = false;
     }

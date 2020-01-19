@@ -67,7 +67,7 @@ impl<'a> LowResTimeService {
     /// Get current time. This function has to be called from
     /// future's poll method, otherwise it panics.
     pub fn now(&self) -> Instant {
-        let cur = self.0.clone().get_mut().current;
+        let cur = self.0.clone().inner.borrow_mut().current;
         if let Some(cur) = cur {
             cur
         } else {
@@ -75,13 +75,13 @@ impl<'a> LowResTimeService {
             let inner = self.0.clone();
             let inner_clone = inner.clone();
             let interval = {
-                let mut b = inner.get_mut();
+                let mut b = inner.inner.borrow_mut();
                 b.current = Some(now);
                 b.resolution
             };
 
             scrappy_rt::spawn(delay_for(interval).then(move |_| {
-                inner_clone.get_mut().current.take();
+                inner_clone.inner.borrow_mut().current.take();
                 ready(())
             }));
             now
@@ -133,7 +133,7 @@ impl SystemTimeService {
     /// Get current time. This function has to be called from
     /// future's poll method, otherwise it panics.
     pub fn now(&self) -> time::SystemTime {
-        let cur = self.0.clone().get_mut().current;
+        let cur = self.0.clone().inner.borrow_mut().current;
         let self_clone = self.0.clone();
         let self_cloned = self_clone.clone();
         if let Some(cur) = cur {
@@ -141,13 +141,13 @@ impl SystemTimeService {
         } else {
             let now = time::SystemTime::now();
             let interval = {
-                let mut b = self_clone.get_mut();
+                let mut b = self_clone.inner.borrow_mut();
                 b.current = Some(now);
                 b.resolution
             };
 
             scrappy_rt::spawn(delay_for(interval).then(move |_| {
-                self_cloned.get_mut().current.take();
+                self_cloned.inner.borrow_mut().current.take();
                 ready(())
             }));
             now

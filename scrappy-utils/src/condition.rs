@@ -27,27 +27,27 @@ impl Condition {
 
     /// Get condition waiter
     pub fn wait(&mut self) -> Waiter {
-        let token = self.0.get_mut().data.insert(None);
+        let token = self.0.inner.borrow_mut().data.insert(None);
         Waiter {
             token,
             inner: self.0.clone(),
         }
     }
 
-    // /// Notify all waiters
-    // pub fn notify(&self) {
-    //     let inner = &mut self.0;
-    //     for item in inner.get_mut().data.iter() {
-    //         if let Some(waker) = item.1 {
-    //             waker.wake();
-    //         }
-    //     }
-    // }
+    /// Notify all waiters
+    pub fn notify(&self) {
+        let inner = self.0.clone();
+        for item in inner.inner.borrow_mut().data.iter() {
+            if let Some(waker) = item.1 {
+                waker.clone().wake();
+            }
+        }
+    }
 }
 
 impl Drop for Condition {
     fn drop(&mut self) {
-        // self.notify()
+        self.notify()
     }
 }
 
@@ -59,7 +59,7 @@ pub struct Waiter {
 
 impl Clone for Waiter {
     fn clone(&self) -> Self {
-        let token = self.inner.get_mut().data.insert(None);
+        let token = self.inner.inner.borrow_mut().data.insert(None);
         Waiter {
             token: token,
             inner: self.inner.clone(),
@@ -72,12 +72,13 @@ impl Future for Waiter {
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
-        let inner = this.inner.get_mut().data.get_mut(this.token);
+        let mut i = this.inner.inner.borrow_mut();
+        let inner = i.data.get_mut(this.token);
         if inner.is_none() {
             let waker = LocalWaker::default();
             waker.register(cx.waker());
             Poll::Pending
-        } else if inner.unwrap().as_ref().unwrap().register(cx.waker()) {
+        } else if inner.unwrap().as_ref().unwrap().clone().register(cx.waker()) {
             Poll::Pending
         } else {
             Poll::Ready(())
@@ -87,7 +88,7 @@ impl Future for Waiter {
 
 impl Drop for Waiter {
     fn drop(&mut self) {
-        self.inner.get_mut().data.remove(self.token);
+        self.inner.inner.borrow_mut().data.remove(self.token);
     }
 }
 

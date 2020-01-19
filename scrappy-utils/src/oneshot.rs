@@ -63,11 +63,11 @@ impl<T: 'static> Sender<T> {
     /// then `Ok(())` is returned. If the receiving end was dropped before
     /// this function was called, however, then `Err` is returned with the value
     /// provided.
-    pub fn send(mut self, val: T) -> Result<(), T> {
+    pub fn send(self, val: T) -> Result<(), T> {
         if self.inner.strong_count() == 2 {
-            let inner = self.inner.get_mut();
+            let mut inner = self.inner.inner.borrow_mut();
             inner.value = Some(val);
-            inner.rx_task.wake();
+            inner.rx_task.clone().wake();
             Ok(())
         } else {
             Err(val)
@@ -87,7 +87,7 @@ struct SenderWrapper<T: 'static> {
 
 impl<T: 'static> Drop for SenderWrapper<T> {
     fn drop(&mut self) {
-        self.t.inner.get_mut().rx_task.wake();
+        self.t.inner.inner.borrow_mut().rx_task.clone().wake();
     }
 }
 
@@ -98,12 +98,12 @@ impl<T: 'static> Future for Receiver<T> {
         let this = self.get_mut();
 
         // If we've got a value, then skip the logic below as we're done.
-        if let Some(val) = this.inner.get_mut().value.take() {
+        if let Some(val) = this.inner.inner.borrow_mut().value.take() {
             return Poll::Ready(Ok(val));
         }
 
         // Check if sender is dropped and return error if it is.
-        this.inner.get_mut().rx_task.register(cx.waker());
+        this.inner.inner.borrow_mut().rx_task.clone().register(cx.waker());
         Poll::Pending
     }
 }
@@ -127,7 +127,7 @@ struct PoolInner<T> {
 
 impl<T: 'static> Pool<T> {
     pub fn channel(&mut self) -> (PSender<T>, PReceiver<T>) {
-        let token = self.0.get_mut().insert(PoolInner {
+        let token = self.0.inner.borrow_mut().insert(PoolInner {
             flags: Flags::all(),
             value: None,
             waker: LocalWaker::default(),
@@ -184,12 +184,13 @@ impl<T: 'static> PSender<T> {
     /// then `Ok(())` is returned. If the receiving end was dropped before
     /// this function was called, however, then `Err` is returned with the value
     /// provided.
-    pub fn send(mut self, val: T) -> Result<(), T> {
-        let inner = self.inner.get_mut().get_mut(self.token).unwrap();
+    pub fn send(self, val: T) -> Result<(), T> {
+        let mut i = self.inner.inner.borrow_mut();
+        let inner = i.get_mut(self.token).unwrap();
 
         if inner.flags.contains(Flags::RECEIVER) {
             inner.value = Some(val);
-            inner.waker.wake();
+            inner.waker.clone().wake();
             Ok(())
         } else {
             Err(val)
@@ -199,7 +200,7 @@ impl<T: 'static> PSender<T> {
     /// Tests to see whether this `Sender`'s corresponding `Receiver`
     /// has gone away.
     pub fn is_canceled(&self) -> bool {
-        !self.inner.inner.into_inner().get_mut(self.token).unwrap()
+        !self.inner.inner.borrow_mut().get_mut(self.token).unwrap()
             .flags
             .contains(Flags::RECEIVER)
     }
@@ -211,12 +212,13 @@ struct PSenderWrapper<T: 'static> {
 
 impl<T: 'static> Drop for PSenderWrapper<T> {
     fn drop(&mut self) {
-        let inner = self.t.inner.get_mut().get_mut(self.t.token).unwrap();
+        let mut i = self.t.inner.inner.borrow_mut();
+        let inner = i.get_mut(self.t.token).unwrap();
         if inner.flags.contains(Flags::RECEIVER) {
-            inner.waker.wake();
+            inner.waker.clone().wake();
             inner.flags.remove(Flags::SENDER);
         } else {
-            self.t.inner.get_mut().remove(self.t.token);
+            self.t.inner.inner.borrow_mut().remove(self.t.token);
         }
     }
 }
@@ -227,11 +229,12 @@ struct PReceiverWrapper<T: 'static> {
 
 impl<T: 'static> Drop for PReceiverWrapper<T> {
     fn drop(&mut self) {
-        let inner = self.t.inner.get_mut().get_mut(self.t.token).unwrap();
+        let mut i = self.t.inner.inner.borrow_mut();
+        let inner = i.get_mut(self.t.token).unwrap();
         if inner.flags.contains(Flags::SENDER) {
             inner.flags.remove(Flags::RECEIVER);
         } else {
-            self.t.inner.get_mut().remove(self.t.token);
+            self.t.inner.inner.borrow_mut().remove(self.t.token);
         }
     }
 }
@@ -240,7 +243,8 @@ impl<T: 'static> Future for PReceiver<T> {
     type Output = Result<T, Canceled>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let inner = self.inner.get_mut().get_mut(self.token).unwrap();
+        let mut i = self.inner.inner.borrow_mut();
+        let inner = i.get_mut(self.token).unwrap();
 
         // If we've got a value, then skip the logic below as we're done.
         if let Some(val) = inner.value.take() {
@@ -251,7 +255,7 @@ impl<T: 'static> Future for PReceiver<T> {
         if !inner.flags.contains(Flags::SENDER) {
             Poll::Ready(Err(Canceled))
         } else {
-            inner.waker.register(cx.waker());
+            inner.waker.clone().register(cx.waker());
             Poll::Pending
         }
     }
