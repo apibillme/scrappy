@@ -3,7 +3,6 @@ name = "scrappy-web-actors"
 version = "0.0.1"
 authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
 description = "scrappy actors support for scrappy web framework."
-readme = "README.md"
 keywords = ["scrappy", "http", "web", "framework", "async"]
 homepage = "https://scrappy.rs"
 repository = "https://github.com/scrappy/scrappy-web.git"
