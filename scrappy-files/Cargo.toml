@@ -26,4 +26,4 @@ v_htmlescape = "0.4"
 
 [dev-dependencies]
 scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
-# scrappy = { path="..", version="0.0.1", features=["openssl"] }
+scrappy = { path="..", version="0.0.1", features=["openssl"] }
