@@ -52,7 +52,7 @@ struct Inner<T> {
     rx_task: LocalWaker,
 }
 
-impl<T> Sender<T> {
+impl<T: 'static> Sender<T> {
     /// Completes this oneshot with a successful result.
     ///
     /// This function will consume `self` and indicate to the other end, the
@@ -81,13 +81,17 @@ impl<T> Sender<T> {
     }
 }
 
-impl<T> Drop for Sender<T> {
+struct SenderWrapper<T: 'static> {
+    t: Sender<T>
+}
+
+impl<T: 'static> Drop for SenderWrapper<T> {
     fn drop(&mut self) {
-        self.inner.get_mut().rx_task.wake();
+        self.t.inner.get_mut().rx_task.wake();
     }
 }
 
-impl<T> Future for Receiver<T> {
+impl<T: 'static> Future for Receiver<T> {
     type Output = Result<T, Canceled>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -121,7 +125,7 @@ struct PoolInner<T> {
     waker: LocalWaker,
 }
 
-impl<T> Pool<T> {
+impl<T: 'static> Pool<T> {
     pub fn channel(&mut self) -> (PSender<T>, PReceiver<T>) {
         let token = self.0.get_mut().insert(PoolInner {
             flags: Flags::all(),
@@ -169,7 +173,7 @@ pub struct PReceiver<T> {
 impl<T> Unpin for PReceiver<T> {}
 impl<T> Unpin for PSender<T> {}
 
-impl<T> PSender<T> {
+impl<T: 'static> PSender<T> {
     /// Completes this oneshot with a successful result.
     ///
     /// This function will consume `self` and indicate to the other end, the
@@ -195,36 +199,44 @@ impl<T> PSender<T> {
     /// Tests to see whether this `Sender`'s corresponding `Receiver`
     /// has gone away.
     pub fn is_canceled(&self) -> bool {
-        !self.inner.get_mut().get_mut(self.token).unwrap()
+        !self.inner.inner.into_inner().get_mut(self.token).unwrap()
             .flags
             .contains(Flags::RECEIVER)
     }
 }
 
-impl<T> Drop for PSender<T> {
+struct PSenderWrapper<T: 'static> {
+    t: PSender<T>
+}
+
+impl<T: 'static> Drop for PSenderWrapper<T> {
     fn drop(&mut self) {
-        let inner = unsafe { self.inner.get_mut().get_unchecked_mut(self.token) };
+        let inner = self.t.inner.get_mut().get_mut(self.t.token).unwrap();
         if inner.flags.contains(Flags::RECEIVER) {
             inner.waker.wake();
             inner.flags.remove(Flags::SENDER);
         } else {
-            self.inner.get_mut().remove(self.token);
+            self.t.inner.get_mut().remove(self.t.token);
         }
     }
 }
 
-impl<T> Drop for PReceiver<T> {
+struct PReceiverWrapper<T: 'static> {
+    t: PReceiver<T>
+}
+
+impl<T: 'static> Drop for PReceiverWrapper<T> {
     fn drop(&mut self) {
-        let inner = unsafe { self.inner.get_mut().get_unchecked_mut(self.token) };
+        let inner = self.t.inner.get_mut().get_mut(self.t.token).unwrap();
         if inner.flags.contains(Flags::SENDER) {
             inner.flags.remove(Flags::RECEIVER);
         } else {
-            self.inner.get_mut().remove(self.token);
+            self.t.inner.get_mut().remove(self.t.token);
         }
     }
 }
 
-impl<T> Future for PReceiver<T> {
+impl<T: 'static> Future for PReceiver<T> {
     type Output = Result<T, Canceled>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {

@@ -33,7 +33,7 @@ impl<T> Cell<T> {
         Rc::strong_count(&self.inner)
     }
 
-    pub(crate) fn get_mut(&mut self) -> &mut T {
+    pub(crate) fn get_mut(self) -> &'static mut T {
         self.inner.get_mut()
     }
 }

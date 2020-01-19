@@ -42,7 +42,7 @@ pub struct Sender<T> {
 
 impl<T> Unpin for Sender<T> {}
 
-impl<T> Sender<T> {
+impl<T: 'static> Sender<T> {
     /// Sends the provided message along this channel.
     pub fn send(&self, item: T) -> Result<(), SendError<T>> {
         let shared = self.shared.get_mut();
@@ -71,7 +71,7 @@ impl<T> Clone for Sender<T> {
     }
 }
 
-impl<T> Sink<T> for Sender<T> {
+impl<T: 'static> Sink<T> for Sender<T> {
     type Error = SendError<T>;
 
     fn poll_ready(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
@@ -91,10 +91,14 @@ impl<T> Sink<T> for Sender<T> {
     }
 }
 
-impl<T> Drop for Sender<T> {
+struct SenderWrapper<T: 'static> {
+    t: Sender<T>
+}
+
+impl<T: 'static> Drop for SenderWrapper<T> {
     fn drop(&mut self) {
-        let count = self.shared.strong_count();
-        let shared = self.shared.get_mut();
+        let count = self.t.shared.strong_count();
+        let shared = self.t.shared.get_mut();
 
         // check is last sender is about to drop
         if shared.has_receiver && count == 2 {
@@ -123,7 +127,7 @@ impl<T> Receiver<T> {
 
 impl<T> Unpin for Receiver<T> {}
 
-impl<T> Stream for Receiver<T> {
+impl<T: 'static> Stream for Receiver<T> {
     type Item = T;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
@@ -140,9 +144,13 @@ impl<T> Stream for Receiver<T> {
     }
 }
 
-impl<T> Drop for Receiver<T> {
+struct ReceiverWrapper<T: 'static> {
+    t: Receiver<T>
+}
+
+impl<T: 'static> Drop for ReceiverWrapper<T> {
     fn drop(&mut self) {
-        let shared = self.shared.get_mut();
+        let shared = self.t.shared.get_mut();
         shared.buffer.clear();
         shared.has_receiver = false;
     }

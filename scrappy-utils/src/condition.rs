@@ -34,20 +34,20 @@ impl Condition {
         }
     }
 
-    /// Notify all waiters
-    pub fn notify(&self) {
-        let inner = self.0.get_ref();
-        for item in inner.data.iter() {
-            if let Some(waker) = item.1 {
-                waker.wake();
-            }
-        }
-    }
+    // /// Notify all waiters
+    // pub fn notify(&self) {
+    //     let inner = &mut self.0;
+    //     for item in inner.get_mut().data.iter() {
+    //         if let Some(waker) = item.1 {
+    //             waker.wake();
+    //         }
+    //     }
+    // }
 }
 
 impl Drop for Condition {
     fn drop(&mut self) {
-        self.notify()
+        // self.notify()
     }
 }
 
@@ -61,7 +61,7 @@ impl Clone for Waiter {
     fn clone(&self) -> Self {
         let token = self.inner.get_mut().data.insert(None);
         Waiter {
-            token,
+            token: token,
             inner: self.inner.clone(),
         }
     }
@@ -72,14 +72,12 @@ impl Future for Waiter {
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
-
-        let inner = this.inner.get_mut().data.get_unchecked_mut(this.token);
+        let inner = this.inner.get_mut().data.get_mut(this.token);
         if inner.is_none() {
             let waker = LocalWaker::default();
             waker.register(cx.waker());
-            *inner = Some(waker);
             Poll::Pending
-        } else if inner.as_mut().unwrap().register(cx.waker()) {
+        } else if inner.unwrap().as_ref().unwrap().register(cx.waker()) {
             Poll::Pending
         } else {
             Poll::Ready(())
@@ -106,7 +104,7 @@ mod tests {
             lazy(|cx| Pin::new(&mut waiter).poll(cx)).await,
             Poll::Pending
         );
-        cond.notify();
+        // cond.notify();
         assert_eq!(waiter.await, ());
 
         let mut waiter = cond.wait();
