@@ -381,7 +381,7 @@ where
 
     fn check_availibility(&self) {
         if !self.waiters_queue.is_empty() && self.acquired < self.limit {
-            self.waker.wake();
+            self.waker.clone().wake();
         }
     }
 }
@@ -442,7 +442,7 @@ where
         let this = unsafe { self.get_unchecked_mut() };
 
         let mut inner = this.inner.as_ref().borrow_mut();
-        inner.waker.register(cx.waker());
+        inner.waker.clone().register(cx.waker());
 
         // check waiters
         loop {

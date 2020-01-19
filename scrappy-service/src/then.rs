@@ -29,7 +29,7 @@ impl<A, B> Clone for ThenService<A, B> {
     }
 }
 
-impl<A: 'static, B: 'static> Service for ThenService<A, B>
+impl<A: std::clone::Clone + 'static, B: std::clone::Clone + 'static> Service for ThenService<A, B>
 where
     A: Service,
     B: Service<Request = Result<A::Response, A::Error>, Error = A::Error>,
@@ -40,9 +40,9 @@ where
     type Future = ThenServiceResponse<A, B>;
 
     fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        let srv = self.0.clone().get_mut();
-        let not_ready = !srv.0.poll_ready(cx)?.is_ready();
-        if !srv.1.poll_ready(cx)?.is_ready() || not_ready {
+        let srv = self.0.get_mut();
+        let not_ready = !srv.0.clone().poll_ready(cx)?.is_ready();
+        if !srv.1.clone().poll_ready(cx)?.is_ready() || not_ready {
             Poll::Pending
         } else {
             Poll::Ready(Ok(()))
@@ -138,7 +138,7 @@ where
         Request = Result<A::Response, A::Error>,
         Error = A::Error,
         InitError = A::InitError,
-    >,
+    >, <A as ServiceFactory>::Service: std::clone::Clone, <B as ServiceFactory>::Service: std::clone::Clone  
 {
     type Request = A::Request;
     type Response = B::Response;
@@ -301,13 +301,14 @@ mod tests {
     #[scrappy_rt::test]
     async fn test_call() {
         let cnt = Rc::new(Cell::new(0));
-        let mut srv = pipeline(Srv1(cnt.clone())).then(Srv2(cnt));
+        let srv = pipeline(Srv1(cnt.clone())).then(Srv2(cnt));
+        let srv_clone = srv.clone();
 
         let res = srv.call(Ok("srv1")).await;
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), (("srv1", "ok")));
 
-        let res = srv.call(Err("srv")).await;
+        let res = srv_clone.call(Err("srv")).await;
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), (("srv2", "err")));
     }

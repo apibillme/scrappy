@@ -53,7 +53,7 @@ where
     }
 }
 
-impl<A: 'static, B: 'static, F: 'static, Fut, Res, Err> Service for AndThenApplyFn<A, B, F, Fut, Res, Err>
+impl<A: std::clone::Clone + 'static, B: 'static, F: 'static, Fut, Res, Err> Service for AndThenApplyFn<A, B, F, Fut, Res, Err>
 where
     A: Service,
     B: Service,
@@ -68,7 +68,7 @@ where
 
     fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         let inner = self.srv.clone().get_mut();
-        let not_ready = inner.0.poll_ready(cx)?.is_pending();
+        let not_ready = inner.0.clone().poll_ready(cx)?.is_pending();
         if inner.1.poll_ready(cx)?.is_pending() || not_ready {
             Poll::Pending
         } else {
@@ -77,7 +77,7 @@ where
     }
 
     fn call(self, req: A::Request) -> Self::Future {
-        let fut = self.srv.get_mut().0.call(req);
+        let fut = self.srv.get_mut().0.clone().call(req);
         AndThenApplyFnFuture {
             state: State::A(fut, Some(self.srv.clone())),
         }
@@ -188,7 +188,7 @@ where
     B: ServiceFactory<Config = A::Config, InitError = A::InitError>,
     F: FnMut(A::Response, &mut B::Service) -> Fut + Clone,
     Fut: Future<Output = Result<Res, Err>>,
-    Err: From<A::Error> + From<B::Error>,
+    Err: From<A::Error> + From<B::Error>, <A as ServiceFactory>::Service: std::clone::Clone 
 {
     type Request = A::Request;
     type Response = Res;

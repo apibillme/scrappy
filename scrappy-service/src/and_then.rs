@@ -29,7 +29,7 @@ impl<A, B> Clone for AndThenService<A, B> {
     }
 }
 
-impl<A: 'static, B: 'static> Service for AndThenService<A, B>
+impl<A: std::clone::Clone + 'static, B: std::clone::Clone + 'static> Service for AndThenService<A, B>
 where
     A: Service,
     B: Service<Request = A::Response, Error = A::Error>,
@@ -41,8 +41,8 @@ where
 
     fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         let srv = self.0.clone().get_mut();
-        let not_ready = !srv.0.poll_ready(cx)?.is_ready();
-        if !srv.1.poll_ready(cx)?.is_ready() || not_ready {
+        let not_ready = !srv.0.clone().poll_ready(cx)?.is_ready();
+        if !srv.1.clone().poll_ready(cx)?.is_ready() || not_ready {
             Poll::Pending
         } else {
             Poll::Ready(Ok(()))
@@ -152,7 +152,7 @@ where
         Request = A::Response,
         Error = A::Error,
         InitError = A::InitError,
-    >,
+    >, <A as ServiceFactory>::Service: std::clone::Clone, <B as ServiceFactory>::Service: std::clone::Clone  
 {
     type Request = A::Request;
     type Response = B::Response;

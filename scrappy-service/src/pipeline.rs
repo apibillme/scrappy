@@ -36,7 +36,7 @@ pub struct Pipeline<T> {
     service: T,
 }
 
-impl<T: 'static +  Service> Pipeline<T> {
+impl<T: std::clone::Clone +  'static +  Service> Pipeline<T> {
     /// Call another service after call to this one has resolved successfully.
     ///
     /// This function can be used to chain two services together and ensure that
@@ -98,7 +98,7 @@ impl<T: 'static +  Service> Pipeline<T> {
     where
         Self: Sized,
         F: IntoService<U>,
-        U: Service<Request = Result<T::Response, T::Error>, Error = T::Error>,
+        U: Service<Request = Result<T::Response, T::Error>, Error = T::Error>, U: std::clone::Clone
     {
         Pipeline {
             service: ThenService::new(self.service, service.into_service()),
@@ -204,7 +204,7 @@ impl<T: 'static +  ServiceFactory> PipelineFactory<T> {
             Request = T::Response,
             Error = T::Error,
             InitError = T::InitError,
-        >,
+        >, <T as ServiceFactory>::Service: std::clone::Clone, <U as ServiceFactory>::Service: std::clone::Clone  
     {
         PipelineFactory {
             factory: AndThenServiceFactory::new(self.factory, factory.into_factory()),
@@ -236,7 +236,7 @@ impl<T: 'static +  ServiceFactory> PipelineFactory<T> {
         U: ServiceFactory<Config = T::Config, InitError = T::InitError>,
         F: FnMut(T::Response, &mut U::Service) -> Fut + Clone,
         Fut: Future<Output = Result<Res, Err>>,
-        Err: From<T::Error> + From<U::Error>,
+        Err: From<T::Error> + From<U::Error>, <T as ServiceFactory>::Service: std::clone::Clone 
     {
         PipelineFactory {
             factory: AndThenApplyFnFactory::new(self.factory, factory.into_factory(), f),
@@ -275,7 +275,7 @@ impl<T: 'static +  ServiceFactory> PipelineFactory<T> {
             Request = Result<T::Response, T::Error>,
             Error = T::Error,
             InitError = T::InitError,
-        >,
+        >, <T as ServiceFactory>::Service: std::clone::Clone, <U as ServiceFactory>::Service: std::clone::Clone  
     {
         PipelineFactory {
             factory: ThenServiceFactory::new(self.factory, factory.into_factory()),

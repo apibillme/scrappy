@@ -134,7 +134,7 @@ impl PayloadSender {
             if shared.borrow().need_read {
                 PayloadStatus::Read
             } else {
-                shared.borrow_mut().io_task.register(cx.waker());
+                shared.borrow_mut().io_task.clone().register(cx.waker());
                 PayloadStatus::Pause
             }
         } else {
@@ -182,7 +182,7 @@ impl Inner {
         self.len += data.len();
         self.items.push_back(data);
         self.need_read = self.len < MAX_BUFFER_SIZE;
-        if let Some(task) = self.task.take() {
+        if let Some(task) = self.task.clone().take() {
             task.wake()
         }
     }
@@ -201,9 +201,9 @@ impl Inner {
             self.need_read = self.len < MAX_BUFFER_SIZE;
 
             if self.need_read && !self.eof {
-                self.task.register(cx.waker());
+                self.task.clone().register(cx.waker());
             }
-            self.io_task.wake();
+            self.io_task.clone().wake();
             Poll::Ready(Some(Ok(data)))
         } else if let Some(err) = self.err.take() {
             Poll::Ready(Some(Err(err)))
@@ -211,8 +211,8 @@ impl Inner {
             Poll::Ready(None)
         } else {
             self.need_read = true;
-            self.task.register(cx.waker());
-            self.io_task.wake();
+            self.task.clone().register(cx.waker());
+            self.io_task.clone().wake();
             Poll::Pending
         }
     }
