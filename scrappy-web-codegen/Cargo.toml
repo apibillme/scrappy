@@ -1,0 +1,23 @@
+[package]
+name = "scrappy-web-codegen"
+version = "0.0.1"
+description = "scrappy web proc macros"
+readme = "README.md"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+license = "MIT"
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "^1"
+syn = { version = "^1", features = ["full", "parsing"] }
+proc-macro2 = "^1"
+
+[dev-dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+scrappy = { path="..", version="0.0.1" }
+futures = { version = "0.3.1" }

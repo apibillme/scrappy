@@ -1,0 +1,33 @@
+[package]
+name = "scrappy-framed"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "scrappy framed app server"
+readme = "README.md"
+keywords = ["http", "web", "framework", "async", "futures"]
+homepage = "https://scrappy.rs"
+repository = "https://github.com/scrappy/scrappy-web.git"
+documentation = "https://docs.rs/scrappy-framed/"
+categories = ["network-programming", "asynchronous",
+              "web-programming::http-server",
+              "web-programming::websocket"]
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+scrappy-codec = { path="../scrappy-codec", version="0.0.1" }
+scrappy-service = { path="../scrappy-service", version="0.0.1" }
+scrappy-router = { path="../scrappy-router", version="0.0.1" }
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+scrappy-http = { path="../scrappy-http", version="0.0.1" }
+
+bytes = "0.5.3"
+futures = "0.3.1"
+pin-project = "0.4.6"
+log = "0.4"
+
+[dev-dependencies]
+scrappy-server = { path="../scrappy-server", version="0.0.1" }
+scrappy-connect = { path="../scrappy-connect", version="0.0.1", features=["openssl"] }
+scrappy-http-test = { path="../scrappy-http-test", version="0.0.1", features=["openssl"] }
+scrappy-utils = { path="../scrappy-utils", version="0.0.1" }

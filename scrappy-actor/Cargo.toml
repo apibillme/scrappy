@@ -1,0 +1,46 @@
+[package]
+name = "scrappy-actor"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "Actor framework for Rust"
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+keywords = ["actor", "futures", "scrappy", "async", "tokio"]
+categories = ["network-programming", "asynchronous"]
+license = "MIT"
+edition = "2018"
+
+[features]
+default = ["resolver", "http"]
+
+# dns resolver
+resolver = ["trust-dns-proto", "trust-dns-resolver"]
+
+# Adds assertion to prevent processing too many messages on event loop
+mailbox_assert = []
+
+# scrappy-http support
+http = ["scrappy-http"]
+
+[dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+scrappy-derive = { path="../scrappy-derive", version="0.0.1" }
+bytes = "0.5.3"
+crossbeam-channel = "0.4"
+derive_more = "0.99.2"
+futures = "0.3.1"
+log = "0.4"
+pin-project = "0.4.6"
+lazy_static = "1.4"
+bitflags = "1.2"
+smallvec = "1.0"
+parking_lot = "0.10"
+tokio = { version = "0.2.6", default-features = false, features=["rt-core", "rt-util", "io-driver", "tcp", "uds", "udp", "time", "signal", "sync"] }
+tokio-util   = { version = "0.2", features = ["full"] }
+
+# scrappy-http support
+scrappy-http =  { path="../scrappy-http", version="0.0.1", optional=true }
+
+# dns resolver
+trust-dns-proto = { version = "=0.18.0-alpha.2", optional = true, default-features = false }
+trust-dns-resolver = { version = "=0.18.0-alpha.2", optional = true, default-features = false }

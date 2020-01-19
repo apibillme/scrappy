@@ -1,0 +1,25 @@
+[package]
+name = "scrappy-web-actors"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "scrappy actors support for scrappy web framework."
+readme = "README.md"
+keywords = ["scrappy", "http", "web", "framework", "async"]
+homepage = "https://scrappy.rs"
+repository = "https://github.com/scrappy/scrappy-web.git"
+documentation = "https://docs.rs/scrappy-web-actors/"
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+scrappy-actor = { path="../scrappy-actor", version="0.0.1" }
+scrappy = { path="..", version="0.0.1" }
+scrappy-http = { path="../scrappy-http", version="0.0.1" }
+scrappy-codec = { path="../scrappy-codec", version="0.0.1" }
+bytes = "0.5.2"
+futures = "0.3.1"
+pin-project = "0.4.6"
+
+[dev-dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+env_logger = "0.6"

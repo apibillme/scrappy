@@ -1,0 +1,18 @@
+[package]
+name = "scrappy-service"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "scrappy service"
+keywords = ["network", "framework", "async", "futures"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+categories = ["network-programming", "asynchronous"]
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+futures-util = "0.3.1"
+pin-project = "0.4.6"
+
+[dev-dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }

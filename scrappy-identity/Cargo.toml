@@ -1,0 +1,24 @@
+[package]
+name = "scrappy-identity"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "Identity service for scrappy web framework."
+readme = "README.md"
+keywords = ["http", "web", "framework", "async", "futures"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+scrappy = { path="..", version="0.0.1", default-features = false, features = ["secure-cookies"] }
+scrappy-service = { path="../scrappy-service", version="0.0.1" }
+futures = "0.3.1"
+serde = "1.0"
+serde_json = "1.0"
+time = "0.1.42"
+
+[dev-dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+scrappy-http = { path="../scrappy-http", version="0.0.1" }
+bytes = "0.5.3"

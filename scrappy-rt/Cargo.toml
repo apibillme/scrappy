@@ -1,0 +1,18 @@
+[package]
+name = "scrappy-rt"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "scrappy runtime"
+keywords = ["network", "framework", "async", "futures"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+categories = ["network-programming", "asynchronous"]
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+scrappy-macros = { path="../scrappy-macros", version="0.0.1" }
+scrappy-threadpool = { path="../scrappy-threadpool", version="0.0.1" }
+futures = "0.3.1"
+copyless = "0.1.4"
+tokio = { version = "0.2.6", default-features=false, features = ["rt-core", "rt-util", "io-driver", "tcp", "uds", "udp", "time", "signal", "stream"] }

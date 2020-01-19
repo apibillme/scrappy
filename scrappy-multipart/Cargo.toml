@@ -1,0 +1,28 @@
+[package]
+name = "scrappy-multipart"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "Multipart support for scrappy web framework."
+readme = "README.md"
+keywords = ["http", "web", "framework", "async", "futures"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+scrappy = { path="..", version="0.0.1", default-features = false }
+scrappy-service = { path="../scrappy-service", version="0.0.1" }
+scrappy-utils = { path="../scrappy-utils", version="0.0.1" }
+bytes = "0.5.3"
+derive_more = "0.99.2"
+httparse = "1.3"
+futures = "0.3.1"
+log = "0.4"
+mime = "0.3"
+time = "0.1"
+twoway = "0.2"
+
+[dev-dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+scrappy-http = { path="../scrappy-http", version="0.0.1" }

@@ -1,0 +1,19 @@
+[package]
+name = "scrappy-cors"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "Cross-origin resource sharing (CORS) for scrappy applications."
+keywords = ["web", "framework"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+scrappy = { path="..", version="0.0.1" }
+scrappy-service = { path="../scrappy-service", version="0.0.1" }
+derive_more = "0.99.2"
+futures = "0.3.1"
+
+[dev-dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }

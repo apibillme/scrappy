@@ -1,0 +1,14 @@
+[package]
+name = "scrappy-string"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "A UTF-8 encoded string with Bytes as a storage"
+keywords = ["scrappy"]
+homepage = "https://scrappy.rs"
+repository = "https://github.com/scrappy/scrappy-net.git"
+documentation = "https://docs.rs/bytestring/"
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+bytes = "0.5.3"

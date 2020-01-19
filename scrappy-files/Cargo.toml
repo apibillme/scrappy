@@ -1,0 +1,29 @@
+[package]
+name = "scrappy-files"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "Static files support for scrappy web."
+keywords = ["scrappy", "http", "async", "futures"]
+categories = ["asynchronous", "web-programming::http-server"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+scrappy = { path="..", version="0.0.1", default-features = false }
+scrappy-http = { path="../scrappy-http", version="0.0.1" }
+scrappy-service = { path="../scrappy-service", version="0.0.1" }
+bitflags = "1"
+bytes = "0.5.3"
+futures = "0.3.1"
+derive_more = "0.99.2"
+log = "0.4"
+mime = "0.3"
+mime_guess = "2.0.1"
+percent-encoding = "2.1"
+v_htmlescape = "0.4"
+
+[dev-dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+scrappy = { path="..", version="0.0.1", features=["openssl"] }

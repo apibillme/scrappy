@@ -1,0 +1,62 @@
+[package]
+name = "scrappy-client"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "scrappy http client."
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+keywords = ["scrappy", "http", "framework", "async", "web"]
+categories = ["network-programming", "asynchronous",
+              "web-programming::http-client",
+              "web-programming::websocket"]
+license = "MIT"
+edition = "2018"
+
+[package.metadata.docs.rs]
+features = ["openssl", "rustls", "compress"]
+
+[features]
+default = ["compress"]
+
+# openssl
+openssl = ["open-ssl", "scrappy-http/openssl"]
+
+# rustls
+rustls = ["rust-tls", "scrappy-http/rustls"]
+
+# content-encoding support
+compress = ["scrappy-http/compress"]
+
+[dependencies]
+scrappy-codec = { path="../scrappy-codec", version="0.0.1" }
+scrappy-service = { path="../scrappy-service", version="0.0.1" }
+scrappy-http = { path="../scrappy-http", version="0.0.1" }
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+
+base64 = "0.11"
+bytes = "0.5.3"
+derive_more = "0.99.2"
+futures-core = "0.3.1"
+log =" 0.4"
+mime = "0.3"
+percent-encoding = "2.1"
+rand = "0.7"
+serde = "1.0"
+serde_json = "1.0"
+serde_urlencoded = "0.6.1"
+open-ssl = { version="0.10", package="openssl", optional = true }
+rust-tls = { version = "0.16.0", package="rustls", optional = true, features = ["dangerous_configuration"]  }
+
+[dev-dependencies]
+scrappy-connect ={ path="../scrappy-connect", version="0.0.1", features=["openssl"]  }
+scrappy = { path="..", version="0.0.1", features=["openssl"]  }
+scrappy-http = { path="../scrappy-http", version="0.0.1", features=["openssl"]  }
+scrappy-http-test = { path="../scrappy-http-test", version="0.0.1", features=["openssl"]  }
+scrappy-utils = { path="../scrappy-utils", version="0.0.1" }
+scrappy-server = { path="../scrappy-server", version="0.0.1" }
+scrappy-tls = { path="../scrappy-tls", version="0.0.1", features=["openssl", "rustls"]}
+brotli2 = "0.3.2"
+flate2 = "1.0.13"
+futures = "0.3.1"
+env_logger = "0.6"
+webpki = "0.21"

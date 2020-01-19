@@ -1,0 +1,49 @@
+[package]
+name = "scrappy-http-test"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "scrappy http test server"
+readme = "README.md"
+keywords = ["http", "web", "framework", "async", "futures"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+categories = ["network-programming", "asynchronous",
+              "web-programming::http-server",
+              "web-programming::websocket"]
+license = "MIT"
+edition = "2018"
+
+[features]
+default = []
+
+# openssl
+openssl = ["open-ssl", "scrappy-client/openssl"]
+
+[dependencies]
+scrappy-service = { path="../scrappy-service", version="0.0.1" }
+scrappy-codec = { path="../scrappy-codec", version="0.0.1" }
+scrappy-connect = { path="../scrappy-connect", version="0.0.1" }
+scrappy-utils = { path="../scrappy-utils", version="0.0.1" }
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+scrappy-server = { path="../scrappy-server", version="0.0.1" }
+scrappy-testing = { path="../scrappy-testing", version="0.0.1" }
+scrappy-client = { path="../scrappy-client", version="0.0.1" }
+
+base64 = "0.11"
+bytes = "0.5.3"
+futures = "0.3.1"
+http = "0.2.0"
+log = "0.4"
+env_logger = "0.6"
+net2 = "0.2"
+serde = "1.0"
+serde_json = "1.0"
+sha1 = "0.6"
+slab = "0.4"
+serde_urlencoded = "0.6.1"
+time = "0.1"
+open-ssl = { version="0.10", package="openssl", optional = true }
+
+[dev-dependencies]
+scrappy = { path="..", version="0.0.1" }
+scrappy-http = { path="../scrappy-http", version="0.0.1" }

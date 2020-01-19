@@ -1,0 +1,30 @@
+[package]
+name = "scrappy-session"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "Session for scrappy web framework."
+readme = "README.md"
+keywords = ["http", "web", "framework", "async", "futures"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+license = "MIT"
+edition = "2018"
+
+[features]
+default = ["cookie-session"]
+
+# sessions feature, session require "ring" crate and c compiler
+cookie-session = ["scrappy/secure-cookies"]
+
+[dependencies]
+scrappy = { path="..", version="0.0.1" }
+scrappy-service = { path="../scrappy-service", version="0.0.1" }
+bytes = "0.5.3"
+derive_more = "0.99.2"
+futures = "0.3.1"
+serde = "1.0"
+serde_json = "1.0"
+time = "0.1.42"
+
+[dev-dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }

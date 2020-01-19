@@ -1,0 +1,21 @@
+[package]
+name = "scrappy-tracing"
+version = "0.0.1"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "Support for tokio tracing with scrappy services"
+keywords = ["network", "framework", "tracing"]
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+categories = ["network-programming", "asynchronous"]
+license = "MIT"
+edition = "2018"
+
+[dependencies]
+scrappy-service = { path="../scrappy-service", version="0.0.1" }
+futures-util = "0.3.1"
+tracing = "0.1"
+tracing-futures = "0.2"
+
+[dev_dependencies]
+scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
+slab = "0.4"

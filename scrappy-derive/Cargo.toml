@@ -1,0 +1,18 @@
+[package]
+name = "scrappy-derive"
+version = "0.0.1"
+edition = "2018"
+authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
+description = "scrappy derive"
+homepage = "https://apibill.me"
+repository = "https://github.com/apibillme/scrappy"
+keywords = ["scrappy"]
+license = "MIT"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+syn = { version = "1", features = ["full"] }
+proc-macro2 = "1"
