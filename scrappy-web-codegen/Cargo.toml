@@ -19,5 +19,5 @@ proc-macro2 = "^1"
 
 [dev-dependencies]
 scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
-scrappy = { path="..", version="0.0.1" }
+# scrappy = { path="..", version="0.0.1" }
 futures = { version = "0.3.1" }
