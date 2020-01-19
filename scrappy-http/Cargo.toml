@@ -84,7 +84,7 @@ fail-ure = { version = "0.1.5", package="failure", optional = true }
 [dev-dependencies]
 scrappy-server = { path="../scrappy-server", version="0.0.1" }
 scrappy-connect = { path="../scrappy-connect", version="0.0.1", features=["openssl"]}
-scrappy-http-test = { path="../scrappy-http-test", version="0.0.1", features=["openssl"] }
+# scrappy-http-test = { path="../scrappy-http-test", version="0.0.1", features=["openssl"] }
 scrappy-tls = { path="../scrappy-tls", version="0.0.1", features=["openssl"] }
 futures = "0.3.1"
 env_logger = "0.6"
