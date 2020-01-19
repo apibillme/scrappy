@@ -10,7 +10,7 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-scrappy = { path="..", version="0.0.1" }
+scrappy = { path="..", version="0.0.2" }
 scrappy-service = { path="../scrappy-service", version="0.0.1" }
 derive_more = "0.99.2"
 futures = "0.3.1"

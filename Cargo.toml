@@ -1,9 +1,8 @@
 [package]
 name = "scrappy"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
 description = "scrappy is the best web framework for Rust"
-readme = "README.md"
 keywords = ["scrappy", "http", "web", "framework", "async"]
 homepage = "https://apibill.me"
 repository = "https://github.com/apibillme/scrappy"
