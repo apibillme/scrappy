@@ -3,7 +3,6 @@ name = "scrappy-http-test"
 version = "0.0.1"
 authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
 description = "scrappy http test server"
-readme = "README.md"
 keywords = ["http", "web", "framework", "async", "futures"]
 homepage = "https://apibill.me"
 repository = "https://github.com/apibillme/scrappy"
