@@ -1,6 +1,6 @@
 [package]
 name = "scrappy-identity"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
 description = "Identity service for scrappy web framework."
 keywords = ["http", "web", "framework", "async", "futures"]
@@ -10,7 +10,7 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-scrappy = { path="..", version="0.0.1", default-features = false, features = ["secure-cookies"] }
+scrappy = { path="..", version="0.0.2", default-features = false, features = ["secure-cookies"] }
 scrappy-service = { path="../scrappy-service", version="0.0.1" }
 futures = "0.3.1"
 serde = "1.0"

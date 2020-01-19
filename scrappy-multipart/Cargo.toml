@@ -1,6 +1,6 @@
 [package]
 name = "scrappy-multipart"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
 description = "Multipart support for scrappy web framework."
 keywords = ["http", "web", "framework", "async", "futures"]
@@ -10,7 +10,7 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-scrappy = { path="..", version="0.0.1", default-features = false }
+scrappy = { path="..", version="0.0.2", default-features = false }
 scrappy-service = { path="../scrappy-service", version="0.0.1" }
 scrappy-utils = { path="../scrappy-utils", version="0.0.1" }
 bytes = "0.5.3"

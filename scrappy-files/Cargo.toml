@@ -1,6 +1,6 @@
 [package]
 name = "scrappy-files"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
 description = "Static files support for scrappy web."
 keywords = ["scrappy", "http", "async", "futures"]
@@ -11,7 +11,7 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-scrappy = { path="..", version="0.0.1", default-features = false }
+scrappy = { path="..", version="0.0.2", default-features = false }
 scrappy-http = { path="../scrappy-http", version="0.0.1" }
 scrappy-service = { path="../scrappy-service", version="0.0.1" }
 bitflags = "1"
@@ -26,4 +26,4 @@ v_htmlescape = "0.4"
 
 [dev-dependencies]
 scrappy-rt = { path="../scrappy-rt", version="0.0.1" }
-scrappy = { path="..", version="0.0.1", features=["openssl"] }
+scrappy = { path="..", version="0.0.2", features=["openssl"] }

@@ -1,6 +1,6 @@
 [package]
 name = "scrappy-session"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
 description = "Session for scrappy web framework."
 keywords = ["http", "web", "framework", "async", "futures"]
@@ -16,7 +16,7 @@ default = ["cookie-session"]
 cookie-session = ["scrappy/secure-cookies"]
 
 [dependencies]
-scrappy = { path="..", version="0.0.1" }
+scrappy = { path="..", version="0.0.2" }
 scrappy-service = { path="../scrappy-service", version="0.0.1" }
 bytes = "0.5.3"
 derive_more = "0.99.2"
