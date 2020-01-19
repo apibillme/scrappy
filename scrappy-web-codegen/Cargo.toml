@@ -2,7 +2,6 @@
 name = "scrappy-web-codegen"
 version = "0.0.1"
 description = "scrappy web proc macros"
-readme = "README.md"
 authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
 homepage = "https://apibill.me"
 repository = "https://github.com/apibillme/scrappy"
