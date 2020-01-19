@@ -19,7 +19,7 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
         blocked_recv: LocalWaker::new(),
     });
     let sender = Sender {
-        shared: shared.clone(),
+        shared: shared,
     };
     let receiver = Receiver { shared };
     (sender, receiver)
@@ -45,7 +45,7 @@ impl<T> Unpin for Sender<T> {}
 impl<T> Sender<T> {
     /// Sends the provided message along this channel.
     pub fn send(&self, item: T) -> Result<(), SendError<T>> {
-        let shared = unsafe { self.shared.get_mut_unsafe() };
+        let shared = self.shared.get_mut();
         if !shared.has_receiver {
             return Err(SendError(item)); // receiver was dropped
         };

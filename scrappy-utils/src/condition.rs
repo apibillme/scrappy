@@ -59,7 +59,7 @@ pub struct Waiter {
 
 impl Clone for Waiter {
     fn clone(&self) -> Self {
-        let token = unsafe { self.inner.get_mut_unsafe() }.data.insert(None);
+        let token = self.inner.get_mut().data.insert(None);
         Waiter {
             token,
             inner: self.inner.clone(),
@@ -73,7 +73,7 @@ impl Future for Waiter {
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.get_mut();
 
-        let inner = unsafe { this.inner.get_mut().data.get_unchecked_mut(this.token) };
+        let inner = this.inner.get_mut().data.get_unchecked_mut(this.token);
         if inner.is_none() {
             let waker = LocalWaker::default();
             waker.register(cx.waker());

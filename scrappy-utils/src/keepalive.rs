@@ -14,7 +14,7 @@ use super::time::{LowResTime, LowResTimeService};
 pub struct KeepAlive<R, E, F> {
     f: F,
     ka: Duration,
-    time: LowResTime,
+    time: LowResTime<'static>,
     _t: PhantomData<(R, E)>,
 }
 
@@ -22,7 +22,7 @@ impl<R, E, F> KeepAlive<R, E, F>
 where
     F: Fn() -> E + Clone,
 {
-    pub fn new(ka: Duration, time: LowResTime, f: F) -> Self {
+    pub fn new(ka: Duration, time: LowResTime<'static>, f: F) -> Self {
         KeepAlive {
             f,
             ka,
@@ -70,7 +70,7 @@ where
 pub struct KeepAliveService<R, E, F> {
     f: F,
     ka: Duration,
-    time: LowResTimeService,
+    time: LowResTimeService<'static>,
     delay: Delay,
     expire: Instant,
     _t: PhantomData<(R, E)>,
@@ -80,7 +80,7 @@ impl<R, E, F> KeepAliveService<R, E, F>
 where
     F: Fn() -> E,
 {
-    pub fn new(ka: Duration, time: LowResTimeService, f: F) -> Self {
+    pub fn new(ka: Duration, time: LowResTimeService<'static>, f: F) -> Self {
         let expire = Instant::from_std(time.now() + ka);
         KeepAliveService {
             f,

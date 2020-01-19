@@ -83,7 +83,7 @@ impl<T> Sender<T> {
 
 impl<T> Drop for Sender<T> {
     fn drop(&mut self) {
-        self.inner.get_ref().rx_task.wake();
+        self.inner.get_mut().rx_task.wake();
     }
 }
 
@@ -99,12 +99,8 @@ impl<T> Future for Receiver<T> {
         }
 
         // Check if sender is dropped and return error if it is.
-        if this.inner.strong_count() == 1 {
-            Poll::Ready(Err(Canceled))
-        } else {
-            this.inner.get_ref().rx_task.register(cx.waker());
-            Poll::Pending
-        }
+        this.inner.get_mut().rx_task.register(cx.waker());
+        Poll::Pending
     }
 }
 
@@ -185,7 +181,7 @@ impl<T> PSender<T> {
     /// this function was called, however, then `Err` is returned with the value
     /// provided.
     pub fn send(mut self, val: T) -> Result<(), T> {
-        let inner = unsafe { self.inner.get_mut().get_unchecked_mut(self.token) };
+        let inner = self.inner.get_mut().get_mut(self.token).unwrap();
 
         if inner.flags.contains(Flags::RECEIVER) {
             inner.value = Some(val);
@@ -199,7 +195,7 @@ impl<T> PSender<T> {
     /// Tests to see whether this `Sender`'s corresponding `Receiver`
     /// has gone away.
     pub fn is_canceled(&self) -> bool {
-        !unsafe { self.inner.get_ref().get_unchecked(self.token) }
+        !self.inner.get_mut().get_mut(self.token).unwrap()
             .flags
             .contains(Flags::RECEIVER)
     }

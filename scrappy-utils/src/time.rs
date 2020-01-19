@@ -6,10 +6,10 @@ use scrappy_rt::time::delay_for;
 use scrappy_service::{Service, ServiceFactory};
 use futures::future::{ok, ready, FutureExt, Ready};
 
-use super::cell::Cell;
+use std::cell::RefCell;
 
 #[derive(Clone, Debug)]
-pub struct LowResTime(Cell<Inner>);
+pub struct LowResTime<'a>(&'a RefCell<Inner>);
 
 #[derive(Debug)]
 struct Inner {
@@ -26,29 +26,29 @@ impl Inner {
     }
 }
 
-impl LowResTime {
-    pub fn with(resolution: Duration) -> LowResTime {
-        LowResTime(Cell::new(Inner::new(resolution)))
+impl<'a> LowResTime<'a> {
+    pub fn with(resolution: Duration) -> LowResTime<'a> {
+        LowResTime(&RefCell::new(Inner::new(resolution)))
     }
 
-    pub fn timer(&self) -> LowResTimeService {
-        LowResTimeService(self.0.clone())
+    pub fn timer(&self) -> LowResTimeService<'a> {
+        LowResTimeService(&self.0)
     }
 }
 
-impl Default for LowResTime {
+impl<'a> Default for LowResTime<'a> {
     fn default() -> Self {
-        LowResTime(Cell::new(Inner::new(Duration::from_secs(1))))
+        LowResTime(&RefCell::new(Inner::new(Duration::from_secs(1))))
     }
 }
 
-impl ServiceFactory for LowResTime {
+impl<'a> ServiceFactory for LowResTime<'a> {
     type Request = ();
     type Response = Instant;
     type Error = Infallible;
     type InitError = Infallible;
     type Config = ();
-    type Service = LowResTimeService;
+    type Service = LowResTimeService<'a>;
     type Future = Ready<Result<Self::Service, Self::InitError>>;
 
     fn new_service(&self, _: ()) -> Self::Future {
@@ -57,30 +57,30 @@ impl ServiceFactory for LowResTime {
 }
 
 #[derive(Clone, Debug)]
-pub struct LowResTimeService(Cell<Inner>);
+pub struct LowResTimeService<'a>(&'a RefCell<Inner>);
 
-impl LowResTimeService {
-    pub fn with(resolution: Duration) -> LowResTimeService {
-        LowResTimeService(Cell::new(Inner::new(resolution)))
+impl<'a> LowResTimeService<'a> {
+    pub fn with(resolution: Duration) -> LowResTimeService<'a> {
+        LowResTimeService(&RefCell::new(Inner::new(resolution)))
     }
 
     /// Get current time. This function has to be called from
     /// future's poll method, otherwise it panics.
     pub fn now(&self) -> Instant {
-        let cur = self.0.get_ref().current;
+        let cur = self.0.into_inner().current;
         if let Some(cur) = cur {
             cur
         } else {
             let now = Instant::now();
-            let mut inner = self.0.clone();
+            let mut inner = self.0.into_inner();
             let interval = {
-                let mut b = inner.get_mut();
+                let mut b = inner;
                 b.current = Some(now);
                 b.resolution
             };
 
             scrappy_rt::spawn(delay_for(interval).then(move |_| {
-                inner.get_mut().current.take();
+                inner.current.take();
                 ready(())
             }));
             now
@@ -88,7 +88,7 @@ impl LowResTimeService {
     }
 }
 
-impl Service for LowResTimeService {
+impl<'a> Service for LowResTimeService<'a> {
     type Request = ();
     type Response = Instant;
     type Error = Infallible;
@@ -104,7 +104,7 @@ impl Service for LowResTimeService {
 }
 
 #[derive(Clone, Debug)]
-pub struct SystemTime(Cell<SystemTimeInner>);
+pub struct SystemTime<'a>(&'a RefCell<SystemTimeInner>);
 
 #[derive(Debug)]
 struct SystemTimeInner {
@@ -122,30 +122,30 @@ impl SystemTimeInner {
 }
 
 #[derive(Clone, Debug)]
-pub struct SystemTimeService(Cell<SystemTimeInner>);
+pub struct SystemTimeService<'a>(&'a RefCell<SystemTimeInner>);
 
-impl SystemTimeService {
-    pub fn with(resolution: Duration) -> SystemTimeService {
-        SystemTimeService(Cell::new(SystemTimeInner::new(resolution)))
+impl<'a> SystemTimeService<'a> {
+    pub fn with(resolution: Duration) -> SystemTimeService<'a> {
+        SystemTimeService(&RefCell::new(SystemTimeInner::new(resolution)))
     }
 
     /// Get current time. This function has to be called from
     /// future's poll method, otherwise it panics.
     pub fn now(&self) -> time::SystemTime {
-        let cur = self.0.get_ref().current;
+        let cur = self.0.into_inner().current;
         if let Some(cur) = cur {
             cur
         } else {
             let now = time::SystemTime::now();
-            let mut inner = self.0.clone();
+            let mut inner = self.0.into_inner();
             let interval = {
-                let mut b = inner.get_mut();
+                let mut b = inner;
                 b.current = Some(now);
                 b.resolution
             };
 
             scrappy_rt::spawn(delay_for(interval).then(move |_| {
-                inner.get_mut().current.take();
+                inner.current.take();
                 ready(())
             }));
             now
