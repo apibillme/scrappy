@@ -3,7 +3,6 @@ name = "scrappy-http"
 version = "0.0.1"
 authors = ["Bevan Hunt <bevan@bevanhunt.com>"]
 description = "scrappy http primitives"
-readme = "README.md"
 keywords = ["scrappy", "http", "framework", "async", "futures"]
 homepage = "https://apibill.me"
 repository = "https://github.com/apibillme/scrappy"
