@@ -53,7 +53,7 @@ where
     }
 }
 
-impl<A: std::clone::Clone + 'static, B: 'static, F: 'static, Fut, Res, Err> Service for AndThenApplyFn<A, B, F, Fut, Res, Err>
+impl<A: std::clone::Clone + 'static, B: std::clone::Clone + 'static, F: 'static, Fut, Res, Err> Service for AndThenApplyFn<A, B, F, Fut, Res, Err>
 where
     A: Service,
     B: Service,
@@ -67,9 +67,9 @@ where
     type Future = AndThenApplyFnFuture<A, B, F, Fut, Res, Err>;
 
     fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        let inner = self.srv.clone().get_mut();
+        let inner = self.srv.clone().inner.borrow_mut();
         let not_ready = inner.0.clone().poll_ready(cx)?.is_pending();
-        if inner.1.poll_ready(cx)?.is_pending() || not_ready {
+        if inner.1.clone().poll_ready(cx)?.is_pending() || not_ready {
             Poll::Pending
         } else {
             Poll::Ready(Ok(()))
@@ -77,7 +77,7 @@ where
     }
 
     fn call(self, req: A::Request) -> Self::Future {
-        let fut = self.srv.get_mut().0.clone().call(req);
+        let fut = self.srv.inner.borrow_mut().0.clone().call(req);
         AndThenApplyFnFuture {
             state: State::A(fut, Some(self.srv.clone())),
         }
@@ -133,7 +133,7 @@ where
                 Poll::Ready(res) => {
                     let b = b.take().unwrap();
                     this.state.set(State::Empty);
-                    let b = b.get_mut();
+                    let b = b.inner.borrow_mut();
                     let fut = (&mut b.2)(res, &mut b.1);
                     this.state.set(State::B(fut));
                     self.poll(cx)
@@ -188,7 +188,7 @@ where
     B: ServiceFactory<Config = A::Config, InitError = A::InitError>,
     F: FnMut(A::Response, &mut B::Service) -> Fut + Clone,
     Fut: Future<Output = Result<Res, Err>>,
-    Err: From<A::Error> + From<B::Error>, <A as ServiceFactory>::Service: std::clone::Clone 
+    Err: From<A::Error> + From<B::Error>, <A as ServiceFactory>::Service: std::clone::Clone, <B as ServiceFactory>::Service: std::clone::Clone  
 {
     type Request = A::Request;
     type Response = Res;

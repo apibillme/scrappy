@@ -55,7 +55,7 @@ impl<T: std::clone::Clone +  'static +  Service> Pipeline<T> {
     where
         Self: Sized,
         F: IntoService<U>,
-        U: Service<Request = T::Response, Error = T::Error>,
+        U: Service<Request = T::Response, Error = T::Error>, U: std::clone::Clone
     {
         Pipeline {
             service: AndThenService::new(self.service, service.into_service()),
@@ -77,7 +77,7 @@ impl<T: std::clone::Clone +  'static +  Service> Pipeline<T> {
         U: Service,
         F: FnMut(T::Response, &mut U) -> Fut,
         Fut: Future<Output = Result<Res, Err>>,
-        Err: From<T::Error> + From<U::Error>,
+        Err: From<T::Error> + From<U::Error>, U: std::clone::Clone
     {
         Pipeline {
             service: AndThenApplyFn::new(self.service, service.into_service(), f),
@@ -236,7 +236,7 @@ impl<T: 'static +  ServiceFactory> PipelineFactory<T> {
         U: ServiceFactory<Config = T::Config, InitError = T::InitError>,
         F: FnMut(T::Response, &mut U::Service) -> Fut + Clone,
         Fut: Future<Output = Result<Res, Err>>,
-        Err: From<T::Error> + From<U::Error>, <T as ServiceFactory>::Service: std::clone::Clone 
+        Err: From<T::Error> + From<U::Error>, <T as ServiceFactory>::Service: std::clone::Clone, <U as ServiceFactory>::Service: std::clone::Clone  
     {
         PipelineFactory {
             factory: AndThenApplyFnFactory::new(self.factory, factory.into_factory(), f),

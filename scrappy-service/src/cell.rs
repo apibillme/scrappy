@@ -33,14 +33,6 @@ impl<T> Cell<T> {
     pub(crate) fn strong_count(&self) -> usize {
         Rc::strong_count(&self.inner)
     }
-
-    pub(crate) fn get_mut(self) -> &'static mut T {
-        &mut self.clone().inner.borrow_mut()
-    }
-
-    pub(crate) fn get_ref(self) -> &'static T {
-        &self.inner.try_borrow().unwrap()
-    }
 }
 
 impl<T: 'static +  crate::Service> crate::Service for Cell<T> {
@@ -50,10 +42,10 @@ impl<T: 'static +  crate::Service> crate::Service for Cell<T> {
     type Future = T::Future;
 
     fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.clone().get_mut().poll_ready(cx)
+        self.clone().inner.borrow_mut().poll_ready(cx)
     }
 
     fn call(self, req: Self::Request) -> Self::Future {
-        self.clone().get_mut().call(req)
+        self.clone().inner.borrow_mut().call(req)
     }
 }

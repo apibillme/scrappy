@@ -40,7 +40,7 @@ where
     type Future = ThenServiceResponse<A, B>;
 
     fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        let srv = self.0.get_mut();
+        let srv = self.0.inner.borrow_mut();
         let not_ready = !srv.0.clone().poll_ready(cx)?.is_ready();
         if !srv.1.clone().poll_ready(cx)?.is_ready() || not_ready {
             Poll::Pending
@@ -51,7 +51,7 @@ where
 
     fn call(self, req: A::Request) -> Self::Future {
         ThenServiceResponse {
-            state: State::A(self.0.clone().get_mut().0.call(req), Some(self.0.clone())),
+            state: State::A(self.0.clone().inner.borrow_mut().0.call(req), Some(self.0.clone())),
         }
     }
 }
@@ -94,7 +94,7 @@ where
                 Poll::Ready(res) => {
                     let b = b.take().unwrap();
                     this.state.set(State::Empty); // drop fut A
-                    let fut = b.get_mut().1.call(res);
+                    let fut = b.inner.borrow_mut().1.call(res);
                     this.state.set(State::B(fut));
                     self.poll(cx)
                 }
