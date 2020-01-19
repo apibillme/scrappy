@@ -51,7 +51,7 @@ where
 
     fn call(self, req: A::Request) -> Self::Future {
         ThenServiceResponse {
-            state: State::A(self.0.clone().inner.borrow_mut().0.call(req), Some(self.0.clone())),
+            state: State::A(self.0.inner.borrow_mut().0.clone().call(req), Some(self.0.clone())),
         }
     }
 }
@@ -77,7 +77,7 @@ where
     Empty,
 }
 
-impl<A: 'static, B: 'static> Future for ThenServiceResponse<A, B>
+impl<A: 'static, B: std::clone::Clone + 'static> Future for ThenServiceResponse<A, B>
 where
     A: Service,
     B: Service<Request = Result<A::Response, A::Error>>,
@@ -94,7 +94,7 @@ where
                 Poll::Ready(res) => {
                     let b = b.take().unwrap();
                     this.state.set(State::Empty); // drop fut A
-                    let fut = b.inner.borrow_mut().1.call(res);
+                    let fut = b.inner.borrow_mut().1.clone().call(res);
                     this.state.set(State::B(fut));
                     self.poll(cx)
                 }

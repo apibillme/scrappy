@@ -67,7 +67,7 @@ where
     type Future = AndThenApplyFnFuture<A, B, F, Fut, Res, Err>;
 
     fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        let inner = self.srv.clone().inner.borrow_mut();
+        let inner = self.srv.inner.borrow_mut();
         let not_ready = inner.0.clone().poll_ready(cx)?.is_pending();
         if inner.1.clone().poll_ready(cx)?.is_pending() || not_ready {
             Poll::Pending
@@ -133,8 +133,9 @@ where
                 Poll::Ready(res) => {
                     let b = b.take().unwrap();
                     this.state.set(State::Empty);
-                    let b = b.inner.borrow_mut();
-                    let fut = (&mut b.2)(res, &mut b.1);
+                    let mut c = b.inner.borrow_mut();
+                    let mut d = b.inner.borrow_mut();
+                    let fut = (&mut c.2)(res, &mut d.1);
                     this.state.set(State::B(fut));
                     self.poll(cx)
                 }

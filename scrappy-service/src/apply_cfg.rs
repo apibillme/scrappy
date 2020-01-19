@@ -102,8 +102,9 @@ where
     type Future = R;
 
     fn new_service(&self, cfg: C) -> Self::Future {
-        let srv = self.clone().srv.inner.borrow_mut();
-        (srv.1)(cfg, &mut srv.0)
+        let mut c = self.srv.inner.borrow_mut();
+        let mut d = self.srv.inner.borrow_mut();
+        (&mut c.1)(cfg, &mut d.0)
     }
 }
 
@@ -213,7 +214,7 @@ where
             },
             State::B(srv) => match srv.poll_ready(cx)? {
                 Poll::Ready(_) => {
-                    let fut = (this.store.clone().inner.borrow_mut().1)(this.cfg.take().unwrap(), srv);
+                    let fut = (this.store.inner.borrow_mut().1)(this.cfg.take().unwrap(), srv);
                     this.state.set(State::C(fut));
                     self.poll(cx)
                 }

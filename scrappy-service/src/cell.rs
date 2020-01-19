@@ -42,10 +42,10 @@ impl<T: 'static +  crate::Service> crate::Service for Cell<T> {
     type Future = T::Future;
 
     fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.clone().inner.borrow_mut().poll_ready(cx)
+        self.inner.borrow_mut().poll_ready(cx)
     }
 
     fn call(self, req: Self::Request) -> Self::Future {
-        self.clone().inner.borrow_mut().call(req)
+        self.inner.borrow_mut().call(req)
     }
 }
