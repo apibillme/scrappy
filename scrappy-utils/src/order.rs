@@ -4,7 +4,6 @@ use std::fmt;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
-use std::rc::Rc;
 use std::task::{Context, Poll};
 
 use scrappy_service::{IntoService, Service, Transform};
@@ -105,7 +104,7 @@ where
 
 pub struct InOrderService<S: Service> {
     service: S,
-    waker: Rc<LocalWaker>,
+    waker: LocalWaker,
     acks: VecDeque<Record<S::Response, S::Error>>,
 }
 
@@ -123,7 +122,7 @@ where
         Self {
             service: service.into_service(),
             acks: VecDeque::new(),
-            waker: Rc::new(LocalWaker::new()),
+            waker: LocalWaker::new(),
         }
     }
 }
@@ -142,7 +141,7 @@ where
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // poll_ready could be called from different task
-        self.waker.register(cx.waker());
+        self.waker.clone().register(cx.waker());
 
         // check acks
         while !self.acks.is_empty() {
