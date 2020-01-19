@@ -45,4 +45,3 @@ open-ssl = { version="0.10", package="openssl", optional = true }
 
 [dev-dependencies]
 scrappy = { path="..", version="0.0.1" }
-scrappy-http = { path="../scrappy-http", version="0.0.1" }
