@@ -50,8 +50,6 @@ rust-tls = { version = "0.16.0", package="rustls", optional = true, features = [
 [dev-dependencies]
 scrappy-connect ={ path="../scrappy-connect", version="0.0.1", features=["openssl"]  }
 scrappy = { path="..", version="0.0.1", features=["openssl"]  }
-scrappy-http = { path="../scrappy-http", version="0.0.1", features=["openssl"]  }
-scrappy-http-test = { path="../scrappy-http-test", version="0.0.1", features=["openssl"]  }
 scrappy-utils = { path="../scrappy-utils", version="0.0.1" }
 scrappy-server = { path="../scrappy-server", version="0.0.1" }
 scrappy-tls = { path="../scrappy-tls", version="0.0.1", features=["openssl", "rustls"]}
