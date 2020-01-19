@@ -240,8 +240,7 @@ impl<T: 'static> Future for PReceiver<T> {
     type Output = Result<T, Canceled>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let this = self.get_mut();
-        let inner = unsafe { this.inner.get_mut().get_unchecked_mut(this.token) };
+        let inner = self.inner.get_mut().get_mut(self.token).unwrap();
 
         // If we've got a value, then skip the logic below as we're done.
         if let Some(val) = inner.value.take() {
