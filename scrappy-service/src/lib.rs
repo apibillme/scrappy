@@ -95,7 +95,7 @@ pub trait Service {
     /// 1. `.poll_ready()` might be called on different task from actual service call.
     ///
     /// 2. In case of chained services, `.poll_ready()` get called for all services at once.
-    fn poll_ready(self, ctx: &mut task::Context<'_>) -> Poll<Result<(), Self::Error>>;
+    fn poll_ready<'a>(self, ctx: &mut task::Context<'a>) -> &'a Poll<Result<(), &'a Self::Error>>;
 
     /// Process the request and return the response asynchronously.
     ///

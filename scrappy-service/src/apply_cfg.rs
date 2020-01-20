@@ -212,7 +212,7 @@ where
                     self.poll(cx)
                 }
             },
-            State::B(srv) => match srv.poll_ready(cx)? {
+            State::B(srv) => match srv.poll_ready(cx) {
                 Poll::Ready(_) => {
                     let fut = (this.store.inner.borrow_mut().1)(this.cfg.take().unwrap(), srv);
                     this.state.set(State::C(fut));

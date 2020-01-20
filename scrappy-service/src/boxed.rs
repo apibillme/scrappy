@@ -135,8 +135,8 @@ where
     type Error = Err;
     type Future = BoxFuture<Res, Err>;
 
-    fn poll_ready(self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.0.poll_ready(ctx)
+    fn poll_ready<'a>(self, ctx: &mut Context<'a>) -> &'a Poll<Result<(), Self::Error>> {
+        &self.0.poll_ready(ctx)
     }
 
     fn call(self, req: Self::Request) -> Self::Future {

@@ -82,7 +82,7 @@ where
     type Error = Err;
     type Future = R;
 
-    fn poll_ready(self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready<'a>(self, cx: &mut Context<'a>) -> &'a Poll<Result<(), Self::Error>> {
         Poll::Ready(futures_util::ready!(self.service.poll_ready(cx)))
     }
 
